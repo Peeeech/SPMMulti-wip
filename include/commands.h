@@ -14,6 +14,8 @@
 namespace mod {
 
 u32 handleItemBinary(const u8* payload, size_t payloadLen, u8* response, size_t responseSize);
+u32 handleIdxBinary(const u8* payload, size_t payloadLen, u8* response, size_t responseSize);
+u32 readMemoryIdx(u8* response, size_t responseSize);
 
 #define COMMAND(id, name, description, argc, code) \
     Command name(id, #name, description, argc, [](eastl::vector<const char*> &args, u8* response, size_t responseSize) -> u32 code);
@@ -23,6 +25,8 @@ extern Command write;
 
 extern Command msgbox;*/
 extern Command item;
+extern Command idx;
+extern Command ridx;
 /*EVT_DECLARE(msgbox_cmd)
 EVT_DECLARE(fwd_msgbox_cmd)
 EVT_DECLARE_USER_FUNC(evt_post_msgbox, 1)*/
