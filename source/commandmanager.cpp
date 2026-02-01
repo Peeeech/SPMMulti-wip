@@ -20,7 +20,9 @@ void initCommands() {
     /*commandManager->addCommand(&read);
     commandManager->addCommand(&write);
     commandManager->addCommand(&msgbox);*/
+    commandManager->addCommand(&idx);
     commandManager->addCommand(&item);
+    commandManager->addCommand(&ridx);
 }
 
 CommandManager* CommandManager::s_instance = nullptr;
@@ -152,10 +154,16 @@ u32 CommandManager::parseAndExecute(
 const u8* payload = data + sizeof(u16) * 2;
 size_t payloadLen = len - sizeof(u16) * 2;
 
-// only have item command set up, but set up for future expansion
+// switch cases
 switch ((CommandId)commandId) {
 case CMD_ITEM: {
     return handleItemBinary(payload, payloadLen, response, responseSize);
+}
+case CMD_IDX: {
+    return handleIdxBinary(payload, payloadLen, response, responseSize);
+}
+case CMD_rIDX: {
+    return readMemoryIdx(response, responseSize);
 }
 default:
     wii::os::OSReport("Unknown command id %u\n", commandId);

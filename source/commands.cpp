@@ -95,6 +95,14 @@ EVT_END()*/
     return sizeof(s32);
 })*/
 
+/*EVT_DEFINE_USER_FUNC(evt_post_msgbox) {
+    char* textPtr = reinterpret_cast<char*>(spm::evtmgr_cmd::evtGetValue(evt, evt->pCurData[0]));
+    delete[] textPtr;
+    return EVT_RET_CONTINUE;
+}*/
+
+static u32 * s_lastItemIdx = (u32 *)&spm::spmario::gp->gsw[1000];
+
 COMMAND(CMD_ITEM, item, "Gives mario an item. (item itemId)", 1, {
     wii::os::OSReport("itemId %s\n", args[0]);
     s32 itemId = strtoul(args[0], NULL, 10);
@@ -105,13 +113,24 @@ COMMAND(CMD_ITEM, item, "Gives mario an item. (item itemId)", 1, {
     return 1;
 })
 
-/*EVT_DEFINE_USER_FUNC(evt_post_msgbox) {
-    char* textPtr = reinterpret_cast<char*>(spm::evtmgr_cmd::evtGetValue(evt, evt->pCurData[0]));
-    delete[] textPtr;
-    return EVT_RET_CONTINUE;
-}*/
+COMMAND(CMD_IDX, idx, "Sets the current item index. (idx index)", 1, {
+    wii::os::OSReport("idx %s\n", args[0]);
+    s32 idx = strtoul(args[0], NULL, 10);
+    wii::os::OSReport("idx %d\n", idx);
 
-static u32 * s_lastItemIdx = (u32 *)&spm::spmario::gp->gsw[1000];
+    *s_lastItemIdx = idx;
+
+    return 1;
+})
+
+COMMAND(CMD_rIDX, ridx, "Reads the current item index. (ridx)", 0, {
+    wii::os::OSReport("ridx\n");
+
+    u32 idx = *s_lastItemIdx;
+
+    msl::string::memcpy((void*)response, &idx, sizeof(u32));
+    return sizeof(u32);
+})
 
 u32 handleItemBinary(
     const u8* payload,
@@ -131,35 +150,94 @@ u32 handleItemBinary(
 
     // DUPLICATE / OUT-OF-ORDER GUARD
     if (idx != (*s_lastItemIdx + 1)) {
-        wii::os::OSReport("CMD_ITEM: ignored idx=%u (last=%u)\n", idx, *s_lastItemIdx);
+        char msg[128];
 
-        if (responseSize >= sizeof(u32)) {
-            u32 ignored = 0;
-            msl::string::memcpy(response, &ignored, sizeof(u32));
-            return sizeof(u32);
-        }
-        return 0;
+        msl::stdio::snprintf(
+            msg,
+            sizeof(msg),
+            "CMD_ITEM: ignored idx=%u expected=%u\n",
+            idx,
+            *s_lastItemIdx + 1
+        );
+
+        u32 len = strlen(msg);
+    memcpy(response, &len, sizeof(len));
+    memcpy(response + sizeof(len), msg, len);
+    return sizeof(len) + len;
+    
     } else {
-      if (spm::mario::marioKeyOffChk())
-      {
-        return 9;
-      }
-      
+    if (spm::mario::marioKeyOffChk())
+    {
+    return 9;
+    }
+
         // Accept and advance
         *s_lastItemIdx = idx;
 
         wii::os::OSReport("CMD_ITEM: accept idx=%u itemId=%u\n", idx, itemId);
+        char msg[128];
+
+        msl::stdio::snprintf(
+            msg,
+            sizeof(msg),
+            "CMD_ITEM: accept idx=%u itemId=%u\n",
+            idx,
+            itemId
+        );
 
         spm::evtmgr::EvtEntry* evt = spm::evtmgr::evtEntry(give_ap_item, 0, 0);
         evt->lw[0] = (s32)itemId;
 
         if (responseSize >= sizeof(u32)) {
-            u32 ok = 1;
-            msl::string::memcpy(response, &ok, sizeof(u32));
-            return sizeof(u32);
+            u32 len = strlen(msg);
+            memcpy(response, &len, sizeof(len));
+            memcpy(response + sizeof(len), msg, len);
+            return sizeof(len) + len;
         }
         return 0;
-} 
+    } 
+}
+
+u32 handleIdxBinary(
+    const u8* payload,
+    size_t payloadLen,
+    u8* response,
+    size_t responseSize
+) {
+    if (payloadLen < sizeof(u32)) {
+        wii::os::OSReport("CMD_IDX: payload too small (%zu)\n", payloadLen);
+        return 0;
+    }
+
+    u32 idx;
+    msl::string::memcpy(&idx, payload + 0, sizeof(u32));
+    *s_lastItemIdx = idx;
+
+    wii::os::OSReport("CMD_IDX: received idx=%u\n", idx);
+    char msg[128];
+    msl::stdio::snprintf(
+            msg,
+            sizeof(msg),
+            "CMD_IDX: received idx=%u\n",
+            idx
+        );
+
+    u32 len = strlen(msg);
+    memcpy(response, &len, sizeof(len));
+    memcpy(response + sizeof(len), msg, len);
+    return sizeof(len) + len;
+}
+
+u32 readMemoryIdx(
+    u8* response,
+    size_t responseSize
+) {
+    wii::os::OSReport("CMD_rIDX: reading idx\n");
+
+    u32 idx = *s_lastItemIdx;
+
+    msl::string::memcpy((void*)response, &idx, sizeof(u32));
+    return sizeof(u32);
 }
 
 EVT_DEFINE_USER_FUNC(evt_deref) {
