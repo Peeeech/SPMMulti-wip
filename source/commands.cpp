@@ -54,7 +54,6 @@ COMMAND(write, "Writes memory to the console. (write address base64_encoded_byte
 })*/
 
 EVT_BEGIN(give_ap_item)
-USER_FUNC(spm::evt_mario::evt_mario_key_off, 0)
 USER_FUNC(spm::evt_mario::evt_mario_get_pos, LW(5), LW(6), LW(7))
 USER_FUNC(spm::evt_item::evt_item_entry, PTR("ap_get"), LW(0), LW(5), LW(6), LW(7), 0, 0, 0, 0, 0)
 USER_FUNC(spm::evt_item::evt_item_flag_onoff, 1, PTR("ap_get"), 8)
@@ -185,6 +184,7 @@ u32 handleItemBinary(
             itemId
         );
 
+        spm::mario::marioKeyOff();
         spm::evtmgr::EvtEntry* evt = spm::evtmgr::evtEntry(give_ap_item, 0, 0);
         evt->lw[0] = (s32)itemId;
 
