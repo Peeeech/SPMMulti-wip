@@ -11,6 +11,7 @@
 #include <msl/stdio.h>
 
 namespace mod {
+u32 itemMax = 0;
 
 inline bool isWithinMem1Range(s32 ptr) {
     return (ptr >= 0x80000000 && ptr <= 0x817fffff);
@@ -52,6 +53,17 @@ COMMAND(write, "Writes memory to the console. (write address base64_encoded_byte
     msl::string::memcpy((void*)response, &decodedLen, sizeof(s32));
     return (u32)sizeof(s32);
 })*/
+
+  s32 evt_item_entry_autoname(spm::evtmgr::EvtEntry * evtEntry, bool firstRun) {
+    spm::evtmgr::EvtVar *args = (spm::evtmgr::EvtVar *)evtEntry->pCurData;
+    char name[11];
+    msl::stdio::sprintf(name,"item_%d_%d", *s_lastItemIdx, itemMax);
+    itemMax++;
+    spm::evtmgr_cmd::evtSetValue(evtEntry, args[0], 0);
+    spm::evt_item::evt_item_entry(evtEntry, firstRun);
+    return 2;
+  }
+EVT_DECLARE_USER_FUNC(evt_item_entry_autoname, -1)
 
 EVT_BEGIN(give_ap_item)
 USER_FUNC(spm::evt_mario::evt_mario_get_pos, LW(5), LW(6), LW(7))
