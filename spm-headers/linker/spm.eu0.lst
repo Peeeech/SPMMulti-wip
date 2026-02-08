@@ -47,7 +47,6 @@
 80032f84:msgWindow_Add
 //data
 80405bd8:msgdrv_msgIcon
-805adf18:msgdrv_msgw
 // more
 
 // offscreendrv.c 
@@ -438,6 +437,7 @@
 
 // evt_guide.c
 800ea87c:evt_guide_flag2_onoff
+800ea908:evt_guide_flag0_onoff
 800ea984:evt_guide_check_flag0
 800eaa88:evt_guide_get_can_search
 // more
@@ -1268,6 +1268,7 @@
 8027a7e8:PSMTXTransApply
 8027a834:PSMTXScale
 8027a85c:PSMTXScaleApply
+8027aec0:C_MTXPerspective
 8027afac:C_MTXOrtho
 8027b4fc:PSVECSquareDistance
 // more
