@@ -96,6 +96,9 @@ static void titleScreenCustomTextPatch()
     SET(GSW(0), 17)
   RETURN_FROM_CALL()
 
+  EVT_BEGIN(mac_02)
+    SET(GSW(0), 359)
+  RETURN_FROM_CALL()
 
   // Dialogue to determine quickstart or no
   EVT_BEGIN(determine_quickstart)
@@ -129,6 +132,7 @@ static void titleScreenCustomTextPatch()
     spm::map_data::MapData * sp2_md = spm::map_data::mapDataPtr("sp2_01");
     spm::map_data::MapData * gn2_md = spm::map_data::mapDataPtr("gn2_02");
     spm::map_data::MapData * gn4_md = spm::map_data::mapDataPtr("gn4_03");
+    spm::map_data::MapData * mac_02_md = spm::map_data::mapDataPtr("mac_02");
 
     evtpatch::hookEvtReplace(spm::aa1_01::aa1_01_mario_house_transition_evt, 10, determine_quickstart);
     evtpatch::hookEvtReplace(ls1_md->initScript, 1, ls1);
@@ -140,6 +144,7 @@ static void titleScreenCustomTextPatch()
     evtpatch::hookEvtReplace(sp2_md->initScript, 1, sp2);
     evtpatch::hookEvtReplace(gn2_md->initScript, 1, gn2);
     evtpatch::hookEvtReplace(gn4_md->initScript, 1, gn4);
+    evtpatch::hookEvtReplace(mac_02_md->initScript, 1, mac_02);
 }
 
 void main()
