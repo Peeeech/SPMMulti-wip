@@ -13,6 +13,8 @@
 namespace mod {
 u32 itemMax = 0;
 
+static u32 * s_lastItemIdx = (u32 *)&spm::spmario::gp->gsw[1000];
+
 inline bool isWithinMem1Range(s32 ptr) {
     return (ptr >= 0x80000000 && ptr <= 0x817fffff);
 }
@@ -111,8 +113,6 @@ EVT_END()*/
     delete[] textPtr;
     return EVT_RET_CONTINUE;
 }*/
-
-static u32 * s_lastItemIdx = (u32 *)&spm::spmario::gp->gsw[1000];
 
 COMMAND(CMD_ITEM, item, "Gives mario an item. (item itemId)", 1, {
     wii::os::OSReport("itemId %s\n", args[0]);
@@ -254,7 +254,7 @@ u32 readMemoryIdx(
 
 EVT_DEFINE_USER_FUNC(evt_deref) {
     s32 addr = spm::evtmgr_cmd::evtGetValue(evt, evt->pCurData[0]);
-    assert(isWithinMem1Range(addr), "evt_deref error");
+    SPM_ASSERT(isWithinMem1Range(addr), "evt_deref error");
     s32* ptr = reinterpret_cast<s32*>(addr);
     spm::evtmgr_cmd::evtSetValue(evt, evt->pCurData[1], *ptr);
     return EVT_RET_CONTINUE;
