@@ -25,6 +25,16 @@
 
 namespace mod {
 
+ItemCheckList itemCheckList[MAX_CHECK_LIST] = 
+{
+  {
+    611, 0x0DF
+  },
+  {
+    612, 0x0DE
+  }
+};
+
 /*
     Title Screen Custom Text
     Prints "SPM Rel Loader" at the top of the title screen
@@ -88,18 +98,33 @@ static void titleScreenCustomTextPatch()
     return spm::itemdrv::itemCollectPouchItem(item);
   }
 
+spm::evtmgr::EvtVar convertGswfToIndex(spm::evtmgr::EvtVar switchNumber)
+{
+  spm::evtmgr::EvtVar gswf = abs(switchNumber);
+  gswf -= (abs(GSWF(0)));
+  gswf = abs(gswf);
+  return gswf;
+}
+
   // does basically nothing for now but will be useful later for swapping pixls/characters around
   spm::itemdrv::ItemEntry *new_itemEntry(const char * name, s32 type, s32 behaviour, f32 x, f32 y, f32 z, spm::evtmgr::EvtScriptCode * pickupScript, spm::evtmgr::EvtVar switchNumber)
   {
     if (switchNumber != 0x0)
     {
+      for (u32 i = 0; i < MAX_CHECK_LIST; i++)
+      {
+        if (itemCheckList[i].gswfIndex == convertGswfToIndex(switchNumber))
+        {
+          type = itemCheckList[i].itemid;
+          break;
+        }
+      }
+      
       spm::itemdrv::ItemEntry * item = itemEntry(name, type, behaviour, x, y, z, pickupScript, switchNumber);
       if (!item)
       {
         return item;
       }
-      //spm::evtmgr::EvtEntry* evt = spm::evtmgr::evtEntry(wait_for_check, 0, 0);
-      //evt->lw[0] = (s32)item->name;
       return item;
     }
     return itemEntry(name, type, behaviour, x, y, z, pickupScript, switchNumber);
