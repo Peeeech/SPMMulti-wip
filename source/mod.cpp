@@ -66,14 +66,29 @@ static void titleScreenCustomTextPatch()
     return pouchAddItem(itemId);
   }
 
-EVT_BEGIN(wait_for_check)
-WAIT_FRM(30)
-USER_FUNC(spm::evt_item::evt_item_wait_collected, LW(0))
-USER_FUNC(add_to_gswf_stack, LW(0))
-RETURN()
-EVT_END()
+  bool itemAdded = false; 
 
-  // does basically nothing for now but will be useful later
+  bool new_itemCollectPouchItem(spm::itemdrv::ItemEntry *item)
+  {
+    wii::os::OSReport("GSWF: %d\n", item->switchNumber);
+    if (item->switchNumber != 0x0)
+    {
+      bool ret = spm::itemdrv::itemCollectPouchItem(item);
+      if (!itemAdded)
+      {
+        addToGswfStack(item);
+        itemAdded = true;
+      }
+      if (ret)
+      {
+        itemAdded = false;
+      }
+      return ret;
+    }
+    return spm::itemdrv::itemCollectPouchItem(item);
+  }
+
+  // does basically nothing for now but will be useful later for swapping pixls/characters around
   spm::itemdrv::ItemEntry *new_itemEntry(const char * name, s32 type, s32 behaviour, f32 x, f32 y, f32 z, spm::evtmgr::EvtScriptCode * pickupScript, spm::evtmgr::EvtVar switchNumber)
   {
     if (switchNumber != 0x0)
@@ -192,6 +207,7 @@ void main()
     spm::item_data::itemDataTable[45].iconId = 324;
     pouchAddItem = patch::hookFunction(spm::mario_pouch::pouchAddItem, new_pouchAddItem);
     itemEntry = patch::hookFunction(spm::itemdrv::itemEntry, new_itemEntry);
+    writeBranchLink(spm::itemdrv::itemMain, 0xA18, new_itemCollectPouchItem);
 
     titleScreenCustomTextPatch();
 }

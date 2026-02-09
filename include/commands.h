@@ -5,6 +5,7 @@
 #include "evt_cmd.h"
 #include <EASTL/string.h>
 #include <EASTL/vector.h>
+#include <spm/itemdrv.h>
 #include <msl/math.h>
 #include <msl/string.h>
 #include <stdlib.h>
