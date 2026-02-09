@@ -32,5 +32,7 @@ EVT_DECLARE(fwd_msgbox_cmd)
 EVT_DECLARE_USER_FUNC(evt_post_msgbox, 1)*/
 // deref(s32* ptr, s32* outvar);
 EVT_DECLARE_USER_FUNC(evt_deref, 2)
+EVT_DECLARE_USER_FUNC(add_to_gswf_stack, 1)
+void addToGswfStack(spm::itemdrv::ItemEntry * item);
 
 }

@@ -1,5 +1,6 @@
 #include "mod.h"
 #include "commandmanager.h"
+#include "commands.h"
 #include "evtpatch.h"
 #include "patch.h"
 #include "msgpatch.h"
@@ -9,6 +10,9 @@
 #include <spm/rel/aa1_01.h>
 #include <spm/fontmgr.h>
 #include <spm/seqdrv.h>
+#include <spm/evt_item.h>
+#include <spm/itemdrv.h>
+#include <spm/evtmgr.h>
 #include <spm/seqdef.h>
 #include <spm/item_data.h>
 #include <spm/mario_pouch.h>
@@ -49,7 +53,9 @@ static void titleScreenCustomTextPatch()
     seq_titleMainReal = spm::seqdef::seq_data[spm::seqdrv::SEQ_TITLE].main;
     spm::seqdef::seq_data[spm::seqdrv::SEQ_TITLE].main = &seq_titleMainOverride;
 }
-  bool( * pouchAddItem)(s32 itemId);
+
+  bool ( * pouchAddItem)(s32 itemId);
+  spm::itemdrv::ItemEntry * ( * itemEntry)(const char * name, s32 type, s32 behaviour, f32 x, f32 y, f32 z, spm::evtmgr::EvtScriptCode * pickupScript, spm::evtmgr::EvtVar switchNumber);
 
   bool new_pouchAddItem(s32 itemId)
   {
@@ -58,6 +64,30 @@ static void titleScreenCustomTextPatch()
       return true;
     }
     return pouchAddItem(itemId);
+  }
+
+EVT_BEGIN(wait_for_check)
+WAIT_FRM(30)
+USER_FUNC(spm::evt_item::evt_item_wait_collected, LW(0))
+USER_FUNC(add_to_gswf_stack, LW(0))
+RETURN()
+EVT_END()
+
+  // does basically nothing for now but will be useful later
+  spm::itemdrv::ItemEntry *new_itemEntry(const char * name, s32 type, s32 behaviour, f32 x, f32 y, f32 z, spm::evtmgr::EvtScriptCode * pickupScript, spm::evtmgr::EvtVar switchNumber)
+  {
+    if (switchNumber != 0x0)
+    {
+      spm::itemdrv::ItemEntry * item = itemEntry(name, type, behaviour, x, y, z, pickupScript, switchNumber);
+      if (!item)
+      {
+        return item;
+      }
+      //spm::evtmgr::EvtEntry* evt = spm::evtmgr::evtEntry(wait_for_check, 0, 0);
+      //evt->lw[0] = (s32)item->name;
+      return item;
+    }
+    return itemEntry(name, type, behaviour, x, y, z, pickupScript, switchNumber);
   }
 
   EVT_BEGIN(insertNop)
@@ -161,6 +191,7 @@ void main()
     spm::item_data::itemDataTable[45].descMsg = "msg_AP_item_desc";
     spm::item_data::itemDataTable[45].iconId = 324;
     pouchAddItem = patch::hookFunction(spm::mario_pouch::pouchAddItem, new_pouchAddItem);
+    itemEntry = patch::hookFunction(spm::itemdrv::itemEntry, new_itemEntry);
 
     titleScreenCustomTextPatch();
 }
